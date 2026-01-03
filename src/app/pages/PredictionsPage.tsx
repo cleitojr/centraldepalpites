@@ -5,87 +5,25 @@ import { AdPlaceholder } from "../components/AdPlaceholder"
 import { Button } from "../components/ui/button"
 import { FilterTags } from "../components/FilterTags"
 import { predictionService, Prediction } from "../../services/predictionService"
-import { paymentService, Purchase } from "../../services/paymentService"
-import { useAuth } from "../context/AuthContext"
-import { CheckoutModal } from "../components/Shop/CheckoutModal"
-import { Loader2, Lock } from "lucide-react"
+import { Loader2 } from "lucide-react"
 
 export function PredictionsPage({ onNavigate }: { onNavigate: (page: string) => void }) {
   const [dbMatches, setDbMatches] = useState<Prediction[]>([])
   const [loading, setLoading] = useState(true)
-  const [userPurchases, setUserPurchases] = useState<string[]>([])
-  const { user } = useAuth()
-
-  // Checkout State
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
-  const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null)
-  const [activePurchase, setActivePurchase] = useState<Purchase | null>(null)
-
-  const fetchPredictions = async () => {
-    try {
-      const data = await predictionService.getAll()
-      setDbMatches(data)
-
-      if (user) {
-        // Fetch user purchases to know what to unlock
-        const { data: purchases } = await supabase
-          .from('purchases')
-          .select('prediction_id')
-          .eq('user_id', user.id)
-          .eq('status', 'completed')
-
-        if (purchases) {
-          setUserPurchases(purchases.map(p => p.prediction_id))
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching predictions:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   useEffect(() => {
-    fetchPredictions()
-  }, [user])
-
-  const handleMatchClick = async (match: Prediction) => {
-    if (match.is_premium) {
-      if (!user) {
-        alert('Você precisa estar logado para comprar um palpite.')
-        onNavigate('login')
-        return
-      }
-
-      // If already purchased, go to detail
-      if (userPurchases.includes(match.id!)) {
-        onNavigate('detail')
-        return
-      }
-
-      // Otherwise, start checkout
+    const fetchPredictions = async () => {
       try {
-        setLoading(true)
-        const purchase = await paymentService.createPixPayment(user.id, match.id!, match.price || 0)
-        setActivePurchase(purchase)
-        setSelectedPrediction(match)
-        setIsCheckoutOpen(true)
+        const data = await predictionService.getAll()
+        setDbMatches(data)
       } catch (error) {
-        console.error('Error starting checkout:', error)
-        alert('Erro ao iniciar pagamento. Tente novamente.')
+        console.error("Error fetching predictions:", error)
       } finally {
         setLoading(false)
       }
-    } else {
-      onNavigate('detail')
     }
-  }
-
-  const handlePaymentSuccess = () => {
-    setIsCheckoutOpen(false)
-    fetchPredictions() // Refresh to unlock the content
-    alert('Pagamento confirmado! O palpite foi desbloqueado.')
-  }
+    fetchPredictions()
+  }, [])
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -97,7 +35,21 @@ export function PredictionsPage({ onNavigate }: { onNavigate: (page: string) => 
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-            {/* Filters ... (Keep existing) */}
+            <div className="bg-slate-900/40 p-5 rounded-2xl border border-slate-800/80">
+              <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Filtrar por Campeonato</h3>
+              <FilterTags
+                items={["Todos", "Brasileirão", "Premier League", "La Liga", "Champions League", "Serie A", "Bundesliga"]}
+                activeItem="Todos"
+              />
+            </div>
+
+            <div className="bg-slate-900/40 p-5 rounded-2xl border border-slate-800/80">
+              <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Filtrar por Data</h3>
+              <FilterTags
+                items={["Todas", "Hoje", "Amanhã", "Sábado", "Domingo"]}
+                activeItem="Todas"
+              />
+            </div>
           </div>
 
           {loading ? (
@@ -120,26 +72,24 @@ export function PredictionsPage({ onNavigate }: { onNavigate: (page: string) => 
                   predictionType={match.prediction_type}
                   hasAiPrediction={!!match.ai_analysis}
                   hasExpertPrediction={!!match.expert_analysis}
-                  isPremium={match.is_premium && !userPurchases.includes(match.id!)}
-                  price={match.price}
-                  onClick={() => handleMatchClick(match)}
+                  onClick={() => onNavigate("detail")}
                 />
               ))}
             </div>
           )}
-        </div>
-      </div>
 
-      {isCheckoutOpen && selectedPrediction && activePurchase && (
-        <CheckoutModal
-          prediction={selectedPrediction}
-          purchase={activePurchase}
-          onClose={() => setIsCheckoutOpen(false)}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
+          <div className="flex justify-center mt-8">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto px-12 border-slate-800 text-slate-400 hover:text-[#00FF88]">
+              Carregar mais palpites
+            </Button>
+          </div>
+        </div>
+
+        <aside className="w-full md:w-[300px] flex flex-col gap-6">
+          <AdPlaceholder size="sidebar" />
+          <AdPlaceholder size="box" />
+        </aside>
+      </div>
     </div>
   )
 }
-
-import { supabase } from "../../lib/supabase"

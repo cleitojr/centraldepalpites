@@ -16,8 +16,6 @@ export interface Prediction {
     ai_analysis?: string
     status: 'pending' | 'won' | 'lost' | 'void'
     prediction_type: string
-    is_premium?: boolean
-    price?: number
     user_id: string
     created_at?: string
 }

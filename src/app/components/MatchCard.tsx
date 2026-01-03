@@ -19,8 +19,6 @@ interface MatchCardProps {
   hasExpertPrediction?: boolean;
   winProbability?: number;
   predictionType?: string;
-  isPremium?: boolean;
-  price?: number;
   featured?: boolean;
   onClick?: () => void;
 }
@@ -35,8 +33,6 @@ export function MatchCard({
   hasExpertPrediction,
   winProbability,
   predictionType,
-  isPremium,
-  price,
   featured,
   onClick
 }: MatchCardProps) {
@@ -44,21 +40,10 @@ export function MatchCard({
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300 hover:border-[#00FF88]/50 hover:shadow-lg hover:shadow-[#00FF88]/10 cursor-pointer bg-slate-900 border-2",
-        featured ? "border-slate-700 bg-gradient-to-br from-slate-900 to-slate-800" :
-          isPremium ? "border-[#CCFF00]/20 shadow-[0_0_20px_-12px_#CCFF00]" : "border-slate-800"
+        featured ? "border-slate-700 bg-gradient-to-br from-slate-900 to-slate-800" : "border-slate-800"
       )}
       onClick={onClick}
     >
-      {/* Premium Badge */}
-      {isPremium && (
-        <div className="absolute top-0 right-0 z-10">
-          <div className="bg-[#CCFF00] text-black text-[9px] font-black px-3 py-1 rounded-bl-xl shadow-lg flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            PREMIUM
-          </div>
-        </div>
-      )}
-
       {/* Header Info */}
       <CardHeader className="pb-2 pt-4 px-4 flex-row items-center justify-between space-y-0">
         <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest text-slate-200 bg-slate-800/80 border-slate-700 px-2 py-0.5">
@@ -86,11 +71,11 @@ export function MatchCard({
               <div className="flex flex-col items-center">
                 <div className="h-1 w-16 bg-slate-800 rounded-full overflow-hidden">
                   <div
-                    className={`${isPremium ? 'bg-[#CCFF00]' : 'bg-[#00FF88]'} h-full`}
+                    className="h-full bg-[#00FF88]"
                     style={{ width: `${winProbability}%` }}
                   />
                 </div>
-                <span className={`text-[10px] ${isPremium ? 'text-[#CCFF00]' : 'text-[#00FF88]'} mt-1 font-mono`}>{winProbability}% Prob.</span>
+                <span className="text-[10px] text-[#00FF88] mt-1 font-mono">{winProbability}% Prob.</span>
               </div>
             )}
           </div>
@@ -105,10 +90,7 @@ export function MatchCard({
 
         {/* Prediction Preview */}
         {(hasAiPrediction || hasExpertPrediction) && (
-          <div className={cn(
-            "rounded-lg p-3 border shadow-inner transition-colors",
-            isPremium ? "bg-[#CCFF00]/5 border-[#CCFF00]/20" : "bg-slate-950/80 border-slate-800/80 group-hover:border-[#00FF88]/20"
-          )}>
+          <div className="bg-slate-950/80 rounded-lg p-3 border border-slate-800/80 shadow-inner group-hover:border-[#00FF88]/20 transition-colors">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Palpite Sugerido</span>
               <div className="flex gap-2">
@@ -127,16 +109,10 @@ export function MatchCard({
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className={cn(
-                "text-sm font-black italic tracking-tight",
-                isPremium ? "text-[#CCFF00] blur-[4px] select-none" : "text-white"
-              )}>
-                {isPremium ? "PALPITE PREMIUM" : (predictionType || "Análise Disponível")}
+              <span className="text-sm font-black text-white italic tracking-tight">
+                {predictionType || "Análise Disponível"}
               </span>
-              <TrendingUp className={cn(
-                "w-4 h-4 animate-pulse",
-                isPremium ? "text-[#CCFF00]" : "text-[#00FF88]"
-              )} />
+              <TrendingUp className="w-4 h-4 text-[#00FF88] animate-pulse" />
             </div>
           </div>
         )}
@@ -144,16 +120,11 @@ export function MatchCard({
 
       <CardFooter className="px-4 pb-4 pt-0">
         <Button
-          className={cn(
-            "w-full transition-all flex items-center justify-between px-4 group/btn",
-            isPremium
-              ? "bg-[#CCFF00] text-black border-[#CCFF00] hover:bg-[#BBEB00]"
-              : "variant-outline group-hover:bg-[#00FF88] group-hover:text-black border-slate-700"
-          )}
-          variant={isPremium ? "default" : "outline"}
+          className="w-full transition-all flex items-center justify-between px-4 group/btn variant-outline group-hover:bg-[#00FF88] group-hover:text-black border-slate-700"
+          variant="outline"
         >
           <span className="font-black text-[11px] uppercase tracking-tighter">
-            {isPremium ? `Comprar por R$ ${price?.toFixed(2)}` : "Ver Análise"}
+            Ver Análise Completa
           </span>
           <ChevronRight className="w-4 h-4 opacity-50 group-hover/btn:translate-x-1 transition-transform" />
         </Button>

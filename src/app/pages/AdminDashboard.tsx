@@ -10,11 +10,11 @@ import {
     Edit2,
     Trash2,
     TrendingUp,
-    LayoutDashboard,
-    LogOut,
-    ChevronRight,
     Database,
-    Users
+    Users,
+    Activity,
+    Settings,
+    LogOut
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -76,17 +76,23 @@ export const AdminDashboard: React.FC = () => {
         <div className="flex min-h-screen bg-slate-950 text-slate-200">
             {/* Sidebar */}
             <aside className="w-64 border-r border-slate-800 bg-slate-900/50 p-6 flex flex-col">
-                <div className="flex items-center gap-2 mb-10 px-2 cursor-pointer" onClick={() => setActiveTab('palpites')}>
-                    <Trophy className="w-8 h-8 text-[#00FF88]" />
-                    <span className="font-bold text-xl tracking-tight">Admin CP</span>
+                <div className="flex items-center gap-3 mb-10 px-2 cursor-pointer group" onClick={() => setActiveTab('palpites')}>
+                    <div className="p-2 bg-[#00FF88] rounded-xl group-hover:rotate-12 transition-transform shadow-lg shadow-[#00FF88]/20">
+                        <Trophy className="w-6 h-6 text-slate-950" />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="font-extrabold text-lg text-white leading-tight">CENTRAL</span>
+                        <span className="text-[10px] font-bold text-[#00FF88] uppercase tracking-[0.3em]">do Palpite</span>
+                    </div>
                 </div>
 
                 <nav className="flex-1 space-y-2">
+                    <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Principal</p>
                     <button
                         onClick={() => setActiveTab('palpites')}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left font-medium ${activeTab === 'palpites'
-                                ? 'bg-[#00FF88]/10 text-[#00FF88]'
-                                : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-[#00FF88]/10 text-[#00FF88]'
+                            : 'hover:bg-slate-800 text-slate-400 hover:text-white'
                             }`}
                     >
                         <Database className="w-5 h-5" />
@@ -95,8 +101,8 @@ export const AdminDashboard: React.FC = () => {
                     <button
                         onClick={() => setActiveTab('usuarios')}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left font-medium ${activeTab === 'usuarios'
-                                ? 'bg-[#00FF88]/10 text-[#00FF88]'
-                                : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-[#00FF88]/10 text-[#00FF88]'
+                            : 'hover:bg-slate-800 text-slate-400 hover:text-white'
                             }`}
                     >
                         <Users className="w-5 h-5" />
@@ -229,9 +235,9 @@ export const AdminDashboard: React.FC = () => {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${prediction.status === 'won' ? 'bg-green-500/10 text-green-400' :
-                                                                prediction.status === 'lost' ? 'bg-red-500/10 text-red-400' :
-                                                                    prediction.status === 'pending' ? 'bg-amber-500/10 text-amber-400' :
-                                                                        'bg-slate-800 text-slate-400'
+                                                            prediction.status === 'lost' ? 'bg-red-500/10 text-red-400' :
+                                                                prediction.status === 'pending' ? 'bg-amber-500/10 text-amber-400' :
+                                                                    'bg-slate-800 text-slate-400'
                                                             }`}>
                                                             {prediction.status}
                                                         </span>

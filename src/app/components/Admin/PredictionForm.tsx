@@ -29,8 +29,6 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
             ai_analysis: prediction.ai_analysis,
             status: prediction.status,
             prediction_type: prediction.prediction_type,
-            is_premium: prediction.is_premium || false,
-            price: prediction.price || 0,
             user_id: prediction.user_id,
         } : {
             match_name: '',
@@ -43,8 +41,6 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
             ai_analysis: '',
             status: 'pending',
             prediction_type: 'Vencedor do Jogo',
-            is_premium: false,
-            price: 0,
             user_id: '',
         }
     );
@@ -244,34 +240,6 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
                                 />
                             </div>
                         </div>
-                    </div>
-
-                    {/* Monetization */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-[#CCFF00]/5 rounded-2xl border border-[#CCFF00]/20">
-                        <div className="flex items-center justify-between p-2">
-                            <label className="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                🌟 Palpite Premium
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setFormData({ ...formData, is_premium: !formData.is_premium })}
-                                className={`w-12 h-6 rounded-full transition-all relative ${formData.is_premium ? 'bg-[#CCFF00]' : 'bg-slate-700'}`}
-                            >
-                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.is_premium ? 'left-7' : 'left-1'}`} />
-                            </button>
-                        </div>
-                        {formData.is_premium && (
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-400">Preço (R$)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.price}
-                                    onChange={e => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 focus:border-[#CCFF00] transition-all text-[#CCFF00] font-bold"
-                                />
-                            </div>
-                        )}
                     </div>
 
                     {/* AI Analysis */}
