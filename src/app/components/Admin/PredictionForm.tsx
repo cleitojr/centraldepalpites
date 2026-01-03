@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Sparkles, Save, X, Target, Info, Calendar, Trophy, Percent } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Save, X, Target, Info, Calendar, Trophy, Percent, Search, ChevronDown, Activity } from 'lucide-react';
 import { Prediction, predictionService } from '../../../services/predictionService';
 import { aiService } from '../../../services/aiService';
+import { sportsService, League, Match } from '../../../services/sportsService';
 
 interface PredictionFormProps {
     prediction?: Prediction;
@@ -12,6 +13,10 @@ interface PredictionFormProps {
 export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [generatingAI, setGeneratingAI] = useState(false);
+    const [leagues] = useState<League[]>(sportsService.getLeagues());
+    const [matches, setMatches] = useState<Match[]>([]);
+    const [loadingMatches, setLoadingMatches] = useState(false);
+
     const [formData, setFormData] = useState<Omit<Prediction, 'id' | 'created_at'>>(
         prediction ? {
             match_name: prediction.match_name,
@@ -36,9 +41,39 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
             ai_analysis: '',
             status: 'pending',
             prediction_type: 'Vencedor do Jogo',
-            user_id: '', // Will be set by service or effect
+            user_id: '',
         }
     );
+
+    useEffect(() => {
+        if (!prediction && formData.league) {
+            const leagueObj = leagues.find(l => l.name === formData.league);
+            loadMatches(leagueObj?.id);
+        }
+    }, [formData.league]);
+
+    const loadMatches = async (leagueId?: number) => {
+        setLoadingMatches(true);
+        try {
+            const data = await sportsService.getUpcomingMatches(leagueId);
+            setMatches(data);
+        } catch (error) {
+            console.error('Error loading matches:', error);
+        } finally {
+            setLoadingMatches(false);
+        }
+    };
+
+    const handleSelectMatch = (match: Match) => {
+        setFormData(prev => ({
+            ...prev,
+            match_name: `${match.homeTeam} vs ${match.awayTeam}`,
+            home_team: match.homeTeam,
+            away_team: match.awayTeam,
+            match_date: match.utcDate,
+            league: match.league
+        }));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,7 +87,7 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
             onSuccess();
         } catch (error) {
             console.error('Error saving prediction:', error);
-            alert('Erro ao salvar palpite. Verifique os campos e tente novamente.');
+            alert('Erro ao salvar palpite.');
         } finally {
             setLoading(false);
         }
@@ -60,7 +95,7 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
 
     const handleGenerateAI = async () => {
         if (!formData.match_name || !formData.league) {
-            alert('Preencha pelo menos o nome da partida e a liga para gerar a análise.');
+            alert('Selecione uma partida primeiro para gerar a análise.');
             return;
         }
 
@@ -82,55 +117,79 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
 
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-                <div className="p-6 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        {prediction ? <Edit2 className="w-5 h-5 text-[#00FF88]" /> : <Plus className="w-5 h-5 text-[#00FF88]" />}
-                        {prediction ? 'Editar Palpite' : 'Novo Palpite'}
-                    </h2>
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+                {/* Header */}
+                <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900 z-10">
+                    <div>
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-[#00FF88]" />
+                            {prediction ? 'Editar Palpite' : 'Novo Palpite Inteligente'}
+                        </h2>
+                        {!prediction && <p className="text-xs text-slate-500">Selecione uma liga e um jogo para preencher automaticamente</p>}
+                    </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-xl transition-all">
                         <X className="w-5 h-5 text-slate-400" />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                    {/* Basic Info */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
+                    {/* Select League & Match */}
+                    {!prediction && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-800/30 rounded-2xl border border-slate-800/50">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                    <Trophy className="w-4 h-4" /> 1. Escolha a Liga
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        value={formData.league}
+                                        onChange={e => setFormData(prev => ({ ...prev, league: e.target.value }))}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 appearance-none focus:border-[#00FF88] transition-all cursor-pointer"
+                                    >
+                                        <option value="">Selecione uma Liga...</option>
+                                        {leagues.map(l => (
+                                            <option key={l.id} value={l.name}>{l.name}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" /> 2. Próximos Jogos
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        disabled={!formData.league || loadingMatches}
+                                        onChange={e => {
+                                            const match = matches.find(m => m.id === parseInt(e.target.value));
+                                            if (match) handleSelectMatch(match);
+                                        }}
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 appearance-none focus:border-[#00FF88] transition-all cursor-pointer disabled:opacity-50"
+                                    >
+                                        <option value="">{loadingMatches ? 'Carregando jogos...' : 'Selecione o Jogo...'}</option>
+                                        {matches.map(m => (
+                                            <option key={m.id} value={m.id}>{m.homeTeam} vs {m.awayTeam}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Basic Info (Fields are prefilled but editable) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                                <Target className="w-4 h-4" /> Nome da Partida
+                                <Target className="w-4 h-4" /> Partida
                             </label>
                             <input
                                 required
                                 value={formData.match_name}
                                 onChange={e => setFormData({ ...formData, match_name: e.target.value })}
-                                placeholder="Ex: Flamengo vs Palmeiras"
-                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 focus:border-[#00FF88] transition-all"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                                <Trophy className="w-4 h-4" /> Liga
-                            </label>
-                            <input
-                                required
-                                value={formData.league}
-                                onChange={e => setFormData({ ...formData, league: e.target.value })}
-                                placeholder="Ex: Brasileirão Série A"
-                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 focus:border-[#00FF88] transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                                <Calendar className="w-4 h-4" /> Data do Jogo
-                            </label>
-                            <input
-                                type="datetime-local"
-                                value={formData.match_date.slice(0, 16)}
-                                onChange={e => setFormData({ ...formData, match_date: new Date(e.target.value).toISOString() })}
+                                placeholder="Selecione um jogo ou digite aqui"
                                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 focus:border-[#00FF88] transition-all"
                             />
                         </div>
@@ -183,7 +242,7 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
                         </div>
                     </div>
 
-                    {/* Analysis with IA Button */}
+                    {/* AI Analysis */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="text-sm font-medium text-slate-400">Análise do Especialista</label>
@@ -206,7 +265,7 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({ prediction, onCl
                         />
                     </div>
 
-                    <div className="flex gap-4 pt-4">
+                    <div className="flex gap-4 pt-4 sticky bottom-0 bg-slate-900 pb-4">
                         <button
                             type="button"
                             onClick={onClose}

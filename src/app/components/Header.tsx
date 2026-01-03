@@ -11,7 +11,7 @@ interface HeaderProps {
 
 export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
 
   const navItems = [
     { label: "Palpites", value: "predictions", icon: <Shield className="w-4 h-4 mr-2" /> },
@@ -68,7 +68,17 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
 
           {user ? (
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
+              {isAdmin && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-[#00FF88] text-slate-950 hover:bg-[#00FF88]/90 h-8 font-bold text-[10px] tracking-widest uppercase px-4 rounded-full shadow-lg shadow-[#00FF88]/10"
+                  onClick={() => onNavigate("admin")}
+                >
+                  Painel Admin
+                </Button>
+              )}
+              <div className="flex items-center gap-2 bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-800">
                 <User className="w-4 h-4 text-[#00FF88]" />
                 <span className="text-xs font-bold text-slate-200">{user.email?.split('@')[0]}</span>
               </div>
@@ -123,8 +133,30 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                 {item.label}
               </button>
             ))}
-            <div className="border-t border-slate-800 pt-4 mt-2">
-              <p className="text-xs text-slate-500 mb-4 text-center">Proibido para menores de 18 anos</p>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  onNavigate("admin");
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center text-lg font-bold text-[#00FF88] transition-colors p-2 rounded-md hover:bg-[#00FF88]/10"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Painel Admin
+              </button>
+            )}
+            <div className="border-t border-slate-800 pt-4 mt-2 text-center">
+              <p className="text-xs text-slate-500 mb-4 uppercase tracking-wider font-bold">18+ Apenas</p>
+              {user && (
+                <Button
+                  variant="ghost"
+                  className="w-full text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
+                </Button>
+              )}
             </div>
           </div>
         </div>
